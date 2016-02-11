@@ -42,7 +42,6 @@ def main():
             if(foundWarehouse):
                 order = bestWarehouse['price'][0].get()
                 drone['turns'] = drone['turns'] + bestPoints
-                drone['actions'] = 
             
         turn = turn + 1
     
@@ -143,6 +142,33 @@ def PriceW(warehouse, orderList, product_weights, payload):
             elif canDoPartially:
                 notDone.put((priceTemp + eucledianDistance(warehouse['location'], order['location']), order))
     return done, notDone
+
+def updateW(warehouse, orderList):
+    done = warehouse['price'][0]
+    notDone = warehouse['price'][1]
+    doneNew = PriorityQueue()
+    notDoneNew = PriorityQueue()
+
+    for c in done:
+        if orderList[c]['done'] == False :
+            doneNew.put(c)
+
+    for c in notDone:
+        if orderList[c]['done'] == False:
+            #for order in orderList:
+            canDo = True
+            for product,number in orderList[c]['products'].items():
+                if(warehouse['inventory'][product] < number):
+                    canDo = False
+            if canDo :
+                doneNew.put(c)
+            else:
+                notDoneNew.put(c)
+
+    warehouse['price'][0] = doneNew
+    warehouse['price'][1] = notDoneNew
+    return warehouse
+
     
 def eucledianDistance(location1, location2):
     return math.hypot(location1[0] - location2[0], location1[1] - location2[1])
