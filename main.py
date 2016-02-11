@@ -55,7 +55,13 @@ def parse_file(filename):
         index = index + 1
         order['num_items'] = int(lines[index])
         index = index + 1
-        order['product_types'] = to_int_list(lines[index])
+        order['products'] = {}
+        raw_products = to_int_list(lines[index])
+        for j in range(0, order['num_items']):
+            if raw_products[j] in order['products']:
+                order['products'][raw_products[j]] = order['products'][raw_products[j]] + 1
+            else:
+                order['products'][raw_products[j]] = 1
         index = index + 1
         orders.append(order)
     parsed['num_orders'] = num_orders
