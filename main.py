@@ -8,6 +8,8 @@ import sys
 def main():
     filename = sys.argv[1]
     delivery = parse_file(filename)
+	for warehouse in delivery['warehouses'].keys:
+	    
     print delivery
 
 def parse_file(filename):
@@ -66,6 +68,25 @@ def parse_file(filename):
 def to_int_list(line):
     return map(int, line.split(" "))
 
-
+def PriceW(x, y, productWarehouseList, orderList):
+    price = sys.maxint
+    correctOrder = orderList[0]
+    for order in orderList:
+        canDo = True;
+        priceTemp = 0
+        for product in order['product_types'].keys:
+            if(productWarehouseList[product] < order['product_types'][product]):
+                canDo = False
+                break
+            priceTemp = priceTemp + 1    
+        if(canDo):
+            priceTemp = priceTemp + eucledianDistance(x, y, order['location'])
+            if(priceTemp < price):
+                price = priceTemp
+                correctOrder = order
+            
+def eucledianDistance(x, y, location):
+    return math.hypot(x - location[0], y - location[1])
+    
 if __name__ == '__main__':
     main()
