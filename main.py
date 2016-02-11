@@ -13,7 +13,7 @@ def main():
     max_turns = delivery['turns']
     warehousePrice = []
     for warehouse in delivery['warehouses']:
-        warehouse['price'] = PriceW(warehouse, delivery['orders'])
+        warehouse['price'] = PriceW(warehouse, delivery['orders'], delivery['product_weights'], delivery['payload'])
     
     pqueue = PriorityQueue()
     for x in range(0, delivery['drones']):
@@ -120,7 +120,7 @@ def parse_file(filename):
 def to_int_list(line):
     return map(int, line.split(" "))
 
-def PriceW(warehouse, orderList):
+def PriceW(warehouse, orderList, product_weights, payload):
     price = sys.maxint
     correctOrder = orderList[0]
     done = PriorityQueue()
@@ -129,16 +129,19 @@ def PriceW(warehouse, orderList):
         canDo = True
         canDoPartially = False
         priceTemp = 0
+        weight = 0
         for product,number in order['products'].items():
+            weight = weight + product_weights[product]*number
             if(warehouse['inventory'][product] < number):
                 canDo = False
             else:
                 canDoPartially = True
-                priceTemp = priceTemp + 2    
-        if canDo:
-            done.put((priceTemp + eucledianDistance(warehouse['location'], order['location']), order))
-        elif canDoPartially:
-            notDone.put((priceTemp + eucledianDistance(warehouse['location'], order['location']), order))
+                priceTemp = priceTemp + 2  
+        if payload >= weight:
+            if canDo:
+                done.put((priceTemp + eucledianDistance(warehouse['location'], order['location']), order))
+            elif canDoPartially:
+                notDone.put((priceTemp + eucledianDistance(warehouse['location'], order['location']), order))
     return done, notDone
     
 def eucledianDistance(location1, location2):
