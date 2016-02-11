@@ -31,15 +31,30 @@ def main():
             drone = pqueue.get()
             bestPoints = sys.maxint
             bestWarehouse = delivery['warehouses'][0]
+            foundWarehouse = False
             for warehouse in delivery['warehouses']:
-                if eucledianDistance(drone['location'], warehouse['location']) + warehouse['price'][0][0][0] < bestPoints:
-                    bestWarehouse = warehouse
-                    bestPoints = eucledianDistance(drone['location'], warehouse['location']) + warehouse['price'][0][0][0]
+                if(not warehouse['price'][0].empty()):
+                    if eucledianDistance(drone['location'], warehouse['location']) + warehouse['price'][0][0][0] < bestPoints:
+                        bestWarehouse = warehouse
+                        bestPoints = eucledianDistance(drone['location'], warehouse['location']) + warehouse['price'][0][0][0]
+                        foundWarehouse = True
+            
+            if(foundWarehouse):
+                order = bestWarehouse['price'][0].get()
+                drone['turns'] = drone['turns'] + bestPoints
+                drone['actions'] = 
             
         turn = turn + 1
     
     print delivery
 
+def doOrder(droneNumber, warehouse, order):
+    action = []
+    for product, number in order['products'].items():
+        action.append(droneNumber + " L " + warehouse['id'] + " " + product + " " + number)
+    for product, number in order['products'].items():
+        action.append(droneNumber + " D " + order['id'] + " " + product + " " + number)
+    
 def parse_file(filename):
     f = open(filename, 'rU')
     parsed = {}
@@ -68,6 +83,7 @@ def parse_file(filename):
     for i in range(0, num_warehouses):
         warehouse = {}
         warehouse['location'] = to_int_list(lines[index])
+        warehouse['id'] = i
         index = index + 1
         warehouse['inventory'] = to_int_list(lines[index])
         index = index + 1
@@ -81,6 +97,8 @@ def parse_file(filename):
     orders = []
     for i in range(0, num_orders):
         order = {}
+        order['done'] = False
+        order['id'] = i
         order['location'] = to_int_list(lines[index])
         index = index + 1
         order['num_items'] = int(lines[index])
