@@ -4,12 +4,40 @@
 #import requests
 import json
 import sys
+import math
+from Queue import PriorityQueue
 
 def main():
     filename = sys.argv[1]
     delivery = parse_file(filename)
-	for warehouse in delivery['warehouses'].keys:
-	    
+    max_turns = delivery['turns']
+    warehousePrice = []
+    for warehouse in delivery['warehouses']:
+        warehouse['price'] = PriceW(warehouse, delivery['orders'])
+    
+    pqueue = PriorityQueue()
+    for x in range(0, delivery['drones']):
+        drone = {}
+        drone['number'] = x
+        drone['location'] = delivery['warehouses'][0]['location']
+        drone['inventory'] = []
+        drone['turn'] = 0
+        pqueue.put((0, drone))
+    
+    turn = 0
+    
+    while turn < max_turns:
+        while pqueue.queue[0] == turn:
+            drone = pqueue.get()
+            bestPoints = sys.maxint
+            bestWarehouse = delivery['warehouses'][0]
+            for warehouse in delivery['warehouses']:
+                if eucledianDistance(drone['location'], warehouse['location']) + warehouse['price'][0][0][0] < bestPoints:
+                    bestWarehouse = warehouse
+                    bestPoints = eucledianDistance(drone['location'], warehouse['location']) + warehouse['price'][0][0][0]
+            
+        turn = turn + 1
+    
     print delivery
 
 def parse_file(filename):
@@ -74,25 +102,29 @@ def parse_file(filename):
 def to_int_list(line):
     return map(int, line.split(" "))
 
-def PriceW(x, y, productWarehouseList, orderList):
+def PriceW(warehouse, orderList):
     price = sys.maxint
     correctOrder = orderList[0]
+    done = PriorityQueue()
+    notDone = PriorityQueue()
     for order in orderList:
-        canDo = True;
+        canDo = True
+        canDoPartially = False
         priceTemp = 0
-        for product in order['product_types'].keys:
-            if(productWarehouseList[product] < order['product_types'][product]):
+        for product,number in order['products'].items():
+            if(warehouse['inventory'][product] < number):
                 canDo = False
-                break
-            priceTemp = priceTemp + 1    
-        if(canDo):
-            priceTemp = priceTemp + eucledianDistance(x, y, order['location'])
-            if(priceTemp < price):
-                price = priceTemp
-                correctOrder = order
-            
-def eucledianDistance(x, y, location):
-    return math.hypot(x - location[0], y - location[1])
+            else:
+                canDoPartially = True
+                priceTemp = priceTemp + 2    
+        if canDo:
+            done.put((priceTemp + eucledianDistance(warehouse['location'], order['location']), order))
+        elif canDoPartially:
+            notDone.put((priceTemp + eucledianDistance(warehouse['location'], order['location']), order))
+    return done, notDone
+    
+def eucledianDistance(location1, location2):
+    return math.hypot(location1[0] - location2[0], location1[1] - location2[1])
     
 if __name__ == '__main__':
     main()
